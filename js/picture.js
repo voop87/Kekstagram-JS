@@ -1,5 +1,6 @@
 var pictures = [];
 var PICTURES_COUNT = 25;
+var ESC_KEYCODE = 27;
 var pictureTemplate = document.querySelector('#picture').content.querySelector('.picture');
 var picturesListELement = document.querySelector('.pictures');
 
@@ -81,36 +82,141 @@ var addFragment = function (elemArray, renderFunction, parentElem) {
 addFragment(pictures, renderPicture, picturesListELement);
 
 
-var showBigPicture = function () {
+var showBigPicture = function (smallPicture) {
   var bigPicture = document.querySelector('.big-picture');
+  var bigPictureCancelBtn = bigPicture.querySelector('.big-picture__cancel');
+
   bigPicture.classList.remove('hidden');
   
   document.querySelector('.big-picture__img')
     .querySelector('img')
-    .src = pictures[0].url;
-  
-  document.querySelector('.likes-count').textContent = pictures[0].likes;
-  document.querySelector('.comments-count').textContent = pictures[0].comments.length;
-  document.querySelector('.social__caption').textContent = pictures[0].description;
+    .src = smallPicture.url;
+
+  document.querySelector('.likes-count').textContent = smallPicture.likes;
+  document.querySelector('.comments-count').textContent = smallPicture.comments.length;
+  document.querySelector('.social__caption').textContent = smallPicture.description;
 
   var getRandomAvatar = function () {
     var randomAvatar = 'img/avatar-' + getRandomInt(1, 6) + '.svg';
     return randomAvatar;
   };
   
-  for (var i = 0; i < pictures[0].comments.length; i++) {
+  for (var i = 0; i < smallPicture.comments.length; i++) {
     var socialComments = document.querySelectorAll('.social__comment');
   
     socialComments[i].querySelector('.social__picture').src = getRandomAvatar();
-    socialComments[i].querySelector('.social__text').textContent = pictures[0].comments[i];
+    socialComments[i].querySelector('.social__text').textContent = smallPicture.comments[i];
   
-    if (pictures[0].comments.length == 1) {
+    if (smallPicture.comments.length === 1) {
       socialComments[1].parentNode.removeChild(socialComments[1]);
     }
   }
-};
+  // Обработчик закрытия большой картинки
+  var closeBigPicture = function () {
+    bigPicture.classList.add('hidden');
+    document.removeEventListener('keydown', onPopupEscPress);
+  };
+  var onPopupEscPress = function (evt) {
+    if (evt.keyCode === ESC_KEYCODE) {
+      closeBigPicture();
+    }
+  };
 
-showBigPicture();
+  document.addEventListener('keydown', onPopupEscPress);
+  bigPictureCancelBtn.addEventListener('click', closeBigPicture);
+};
 
 document.querySelector('.social__comment-count').classList.add('visually-hidden');
 document.querySelector('.social__comments-loader').classList.add('visually-hidden');
+
+// Показ увеличенной фотографии при клике на маленькую
+var picturesList = picturesListELement.querySelectorAll('.picture');
+// НЕ РАБОТАЕТ ДОДЕЛАТЬ!!
+for (let i = 0; i < picturesList.length; i++) {
+  picturesList[i].addEventListener('click', function () {
+    showBigPicture(pictures[i]);
+  });
+}
+
+// Загрузка изображения и показ формы редактирования
+var uploadFileInput = picturesListELement.querySelector('#upload-file');
+var imgUploadForm = picturesListELement.querySelector('.img-upload__overlay');
+var imgUploadCancelButton = picturesListELement.querySelector('.img-upload__cancel');
+
+var onPopupEscPress = function (evt) {
+  if (evt.keyCode === ESC_KEYCODE) {
+    closeImgUploadForm();
+  }
+};
+var openImgUploadForm = function () {
+  imgUploadForm.classList.remove('hidden');
+  document.addEventListener('keydown', onPopupEscPress);
+};
+var closeImgUploadForm = function () {
+  imgUploadForm.classList.add('hidden');
+  uploadFileInput.value = '';
+  document.removeEventListener('keydown', onPopupEscPress);
+};
+
+uploadFileInput.addEventListener('change', function () {
+  openImgUploadForm();
+
+  // Изменение уровня эффектов на фото
+  var DEFAULT_EFFECT_LEVEL = 20;
+  var effectLevelPin = imgUploadForm.querySelector('.effect-level__pin');
+  var effectLevelLine = imgUploadForm.querySelector('.effect-level__line');
+  var effectLevelInput = imgUploadForm.querySelector('.effect-level__value');
+  var effectLevelDepth = imgUploadForm.querySelector('.effect-level__depth');
+  var effectTypeList = imgUploadForm.querySelector('.effects__list');
+  var effectTypes = imgUploadForm.querySelectorAll('.effects__radio');
+  
+  var changeEffectLevel = function () {
+    var pinPosition = parseInt(window.getComputedStyle(effectLevelPin).left);
+    var lineWidth = parseInt(window.getComputedStyle(effectLevelLine).width);
+    var effectLevel = Math.round(pinPosition / lineWidth * 100);
+    effectLevelInput.value = effectLevel;
+    effectLevelDepth.style.width = effectLevel;
+  };
+
+// Сбрасывает уровень эффекта на дефолт при клике на тип эффекта
+  var onEffectTypeChange = function () {
+    for (var i = 0; i < effectTypes.length; i++) {
+      effectTypes[i].addEventListener('change', function () {
+        effectLevelInput.value = DEFAULT_EFFECT_LEVEL;
+      });
+    }
+  };
+  
+  effectTypeList.addEventListener('click', onEffectTypeChange);
+  effectLevelPin.addEventListener('mouseup', function () {
+    changeEffectLevel();
+  });
+
+  imgUploadCancelButton.addEventListener('click', function () {
+    closeImgUploadForm();
+  });
+  imgUploadCancelButton.addEventListener('keydown', onPopupEscPress);
+  
+  // Проверка валидности ввода хэш-тегов
+  var inputHashtag = document.querySelector('.text__hashtags');
+  
+  var checkInputHashtagValidity = function () {
+    var hashtagList = inputHashtag.value.split(' ');
+    inputHashtag.setCustomValidity('');
+    for (var i = 0; i < hashtagList.length; i++) {
+      if (hashtagList[i].length <= 20) {
+        if (hashtagList[i].includes('#', 0)) {
+          if (hashtagList[i].includes('#', 1)) {
+            inputHashtag.setCustomValidity('Внутри хэш-тега не может быть символа #');
+          }
+        } else {
+          inputHashtag.setCustomValidity('Хэш-тег должен начинаться с символа #');
+        }
+      } else {
+        inputHashtag.setCustomValidity('Длина хэш-тега должна быть не более 20 символов');
+      }
+    }
+  };
+  
+  inputHashtag.addEventListener('change', checkInputHashtagValidity);
+});
