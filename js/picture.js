@@ -169,27 +169,87 @@ uploadFileInput.addEventListener('change', function () {
   var effectLevelDepth = imgUploadForm.querySelector('.effect-level__depth');
   var effectTypeList = imgUploadForm.querySelector('.effects__list');
   var effectTypes = imgUploadForm.querySelectorAll('.effects__radio');
-  
-  var changeEffectLevel = function () {
-    var pinPosition = parseInt(window.getComputedStyle(effectLevelPin).left);
-    var lineWidth = parseInt(window.getComputedStyle(effectLevelLine).width);
-    var effectLevel = Math.round(pinPosition / lineWidth * 100);
-    effectLevelInput.value = effectLevel;
-    effectLevelDepth.style.width = effectLevel;
-  };
 
 // Сбрасывает уровень эффекта на дефолт при клике на тип эффекта
   var onEffectTypeChange = function () {
     for (var i = 0; i < effectTypes.length; i++) {
       effectTypes[i].addEventListener('change', function () {
         effectLevelInput.value = DEFAULT_EFFECT_LEVEL;
+        effectLevelDepth.style.width = DEFAULT_EFFECT_LEVEL + '%';
+        effectLevelPin.style.left = DEFAULT_EFFECT_LEVEL + '%';
       });
     }
   };
   
   effectTypeList.addEventListener('click', onEffectTypeChange);
-  effectLevelPin.addEventListener('mouseup', function () {
-    changeEffectLevel();
+
+  //Изменение уровня фильтра при перетаскивании ползунка
+  effectLevelPin.addEventListener('mousedown', function (evt) {
+    evt.preventDefault();
+    var startPos = evt.clientX;
+
+    var onMouseMove = function (moveEvt) {
+      moveEvt.preventDefault();
+
+      var lineWidth = parseInt(window.getComputedStyle(effectLevelLine).width);
+
+      var PIN_MIN_POSITION = 0;
+      var PIN_MAX_POSITION = lineWidth;
+
+      var shift = startPos - moveEvt.clientX;
+      startPos = moveEvt.clientX;
+
+      effectLevelPin.style.left = (effectLevelPin.offsetLeft - shift) + 'px';
+      
+      if ((effectLevelPin.offsetLeft - shift) < PIN_MIN_POSITION) {
+        effectLevelPin.style.left = PIN_MIN_POSITION;
+      }
+      if ((effectLevelPin.offsetLeft - shift) > PIN_MAX_POSITION) {
+        effectLevelPin.style.left = PIN_MAX_POSITION + 'px';
+      }
+
+      var pinPosition = parseInt(effectLevelPin.style.left);
+      
+      var effectLevel = Math.round(pinPosition / lineWidth * 100);
+      effectLevelInput.value = effectLevel;
+      effectLevelDepth.style.width = effectLevel + '%';
+    };
+
+    var onMouseUp = function (upEvt) {
+      upEvt.preventDefault();
+
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+    
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  });
+
+  // Изменение уровня фильтра при клике на линию слайдера
+  effectLevelLine.addEventListener('click', function (evt) {
+    evt.preventDefault();
+
+    var lineWidth = parseInt(window.getComputedStyle(effectLevelLine).width);
+    var PIN_MIN_POSITION = 0;
+    var PIN_MAX_POSITION = lineWidth;
+    var LINE_START_POSITION = 254;
+    var startPos = evt.clientX - LINE_START_POSITION;
+  
+    effectLevelPin.style.left = startPos + 'px';
+    
+    if (startPos < PIN_MIN_POSITION) {
+      effectLevelPin.style.left = PIN_MIN_POSITION;
+    }
+    if (startPos > PIN_MAX_POSITION) {
+      effectLevelPin.style.left = PIN_MAX_POSITION + 'px';
+    }
+
+    var pinPosition = parseInt(effectLevelPin.style.left);
+    
+    var effectLevel = Math.round(pinPosition / lineWidth * 100);
+    effectLevelInput.value = effectLevel;
+    effectLevelDepth.style.width = effectLevel + '%';
   });
 
   imgUploadCancelButton.addEventListener('click', function () {
