@@ -4,8 +4,10 @@
   // Загрузка изображения и показ формы редактирования
   var picturesListELement = document.querySelector('.pictures');
   var uploadFileInput = picturesListELement.querySelector('#upload-file');
-  var imgUploadForm = picturesListELement.querySelector('.img-upload__overlay');
+  var imgUploadWindow = picturesListELement.querySelector('.img-upload__overlay');
   var imgUploadCancelButton = picturesListELement.querySelector('.img-upload__cancel');
+  var inputHashtag = imgUploadWindow.querySelector('.text__hashtags');
+  var inputDescription = imgUploadWindow.querySelector('.text__description');
 
   var onPopupEscPress = function (evt) {
     if (evt.keyCode === ESC_KEYCODE) {
@@ -13,35 +15,59 @@
     }
   };
   var openImgUploadForm = function () {
-    imgUploadForm.classList.remove('hidden');
+    imgUploadWindow.classList.remove('hidden');
     document.addEventListener('keydown', onPopupEscPress);
   };
   var closeImgUploadForm = function () {
-    imgUploadForm.classList.add('hidden');
+    imgUploadWindow.classList.add('hidden');
     uploadFileInput.value = '';
+    // Остальные инпуты формы для сброса значений на дефолт
+    resetScaleLevel();
+    resetEffectLevel();
+    DEFAULT_EFFECT_TYPE.checked = 'true';
+    inputHashtag.value = '';
+    inputDescription.value = '';
     document.removeEventListener('keydown', onPopupEscPress);
   };
+
+  // Уровень увеличения фото
+  var DEFAULT_SCALE_LEVEL = '55';
+  var scaleLevelInput = imgUploadWindow.querySelector('.scale__control--value');
+  var uploadImg = imgUploadWindow.querySelector('img');
+
+  // Сбрасывает уровень увеличения фото на дефолт
+  var resetScaleLevel = function () {
+    scaleLevelInput.value = DEFAULT_SCALE_LEVEL + '%';
+    uploadImg.style.transform = 'scale(1)';
+  };
+
+  // Уровень эффектов на фото
+  var DEFAULT_EFFECT_LEVEL = 20;
+  var effectLevelPin = imgUploadWindow.querySelector('.effect-level__pin');
+  var effectLevelInput = imgUploadWindow.querySelector('.effect-level__value');
+  var effectLevelDepth = imgUploadWindow.querySelector('.effect-level__depth');
+
+  // Сбрасывает уровень эффекта на дефолт
+  var resetEffectLevel = function () {
+    effectLevelInput.value = DEFAULT_EFFECT_LEVEL;
+    effectLevelDepth.style.width = DEFAULT_EFFECT_LEVEL + '%';
+    effectLevelPin.style.left = DEFAULT_EFFECT_LEVEL + '%';
+  };
+
+  // Тип эффекта по умолчанию
+  var DEFAULT_EFFECT_TYPE = imgUploadWindow.querySelector('#effect-none');
 
   uploadFileInput.addEventListener('change', function () {
     openImgUploadForm();
 
-    // Изменение уровня эффектов на фото
-    var DEFAULT_EFFECT_LEVEL = 20;
-    var effectLevelPin = imgUploadForm.querySelector('.effect-level__pin');
-    var effectLevelLine = imgUploadForm.querySelector('.effect-level__line');
-    var effectLevelInput = imgUploadForm.querySelector('.effect-level__value');
-    var effectLevelDepth = imgUploadForm.querySelector('.effect-level__depth');
-    var effectTypeList = imgUploadForm.querySelector('.effects__list');
-    var effectTypes = imgUploadForm.querySelectorAll('.effects__radio');
+    var effectLevelLine = imgUploadWindow.querySelector('.effect-level__line');
+    var effectTypeList = imgUploadWindow.querySelector('.effects__list');
+    var effectTypes = imgUploadWindow.querySelectorAll('.effects__radio');
 
     // Сбрасывает уровень эффекта на дефолт при клике на тип эффекта
     var onEffectTypeChange = function () {
       for (var i = 0; i < effectTypes.length; i++) {
-        effectTypes[i].addEventListener('change', function () {
-          effectLevelInput.value = DEFAULT_EFFECT_LEVEL;
-          effectLevelDepth.style.width = DEFAULT_EFFECT_LEVEL + '%';
-          effectLevelPin.style.left = DEFAULT_EFFECT_LEVEL + '%';
-        });
+        effectTypes[i].addEventListener('change', resetEffectLevel);
       }
     };
     effectTypeList.addEventListener('click', onEffectTypeChange);
@@ -113,8 +139,8 @@
       closeImgUploadForm();
     });
     imgUploadCancelButton.addEventListener('keydown', onPopupEscPress);
+
     // Проверка валидности ввода хэш-тегов
-    var inputHashtag = document.querySelector('.text__hashtags');
     var checkInputHashtagValidity = function () {
       var hashtagList = inputHashtag.value.split(' ');
       inputHashtag.setCustomValidity('');
@@ -134,5 +160,15 @@
       }
     };
     inputHashtag.addEventListener('change', checkInputHashtagValidity);
+
+    // Отправляем данные формы на сервер и закрываем при успехе диалоговое окно
+    var form = document.querySelector('.img-upload__form');
+    form.addEventListener('submit', function (evt) {
+      evt.preventDefault();
+
+      window.backend.save(new FormData(form), function () {
+        closeImgUploadForm();
+      }, window.errorHandler);
+    });
   });
 })();
