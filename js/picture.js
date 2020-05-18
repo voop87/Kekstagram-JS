@@ -54,30 +54,19 @@
 
   // Показ увеличенной фотографии при клике на маленькую
   var successHandler = function (pictures) {
-    var picturesListELement = document.querySelector('.pictures');
-    var picturesList = picturesListELement.querySelectorAll('.picture');
+    window.picturesList = window.picturesListELement.querySelectorAll('.picture');
 
-    for (var i = 0; i < picturesList.length; i++) {
+    for (var i = 0; i < window.picturesList.length; i++) {
       (function (picture) {
-        picturesList[i].addEventListener('click', function () {
+        window.picturesList[i].addEventListener('click', function () {
           showBigPicture(picture);
         });
       })(pictures[i]);
     }
   };
 
-  // Создаем окно, в котором будет отображаться сообщение об ошибке
-  var errorHandler = function (errorMessage) {
-    var node = document.createElement('div');
-    node.style = 'z-index: 100; margin: 0 auto; text-align: center; background-color: red;';
-    node.style.position = 'absolute';
-    node.style.left = '0';
-    node.style.right = '0';
-    node.style.fontSize = '30px';
+  // Скопируем функцию successHandler для использования в модуле show-filters
+  window.addShowBigPictureListener = successHandler;
 
-    node.textContent = errorMessage;
-    document.body.insertAdjacentElement('afterbegin', node);
-  };
-
-  window.backend.load(successHandler, errorHandler);
+  window.backend.load(successHandler, window.errorHandler);
 })();

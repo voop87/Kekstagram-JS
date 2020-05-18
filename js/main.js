@@ -2,7 +2,7 @@
 // Создание и отрисовка случайных фото
 (function () {
   var pictureTemplate = document.querySelector('#picture').content.querySelector('.picture');
-  var picturesListELement = document.querySelector('.pictures');
+  window.picturesListELement = document.querySelector('.pictures');
 
   // Генератор случайных целых чисел
   window.getRandomInt = function (min, max) {
@@ -10,7 +10,7 @@
     return Math.floor(rand);
   };
 
-  var renderPicture = function (picture) {
+  window.renderPicture = function (picture) {
     var pictureElement = pictureTemplate.cloneNode(true);
 
     pictureElement.querySelector('.picture__img').src = picture.url;
@@ -22,14 +22,16 @@
 
   // Получаем список фотографий, загруженных с сервера
   var successHandler = function (pictures) {
-    var addFragment = function (elemArray, renderFunction, parentElem) {
+
+    window.addFragment = function (elemArray, renderFunction, parentElem) {
       var fragment = document.createDocumentFragment();
       for (var i = 0; i < elemArray.length; i++) {
         fragment.appendChild(renderFunction(elemArray[i]));
       }
       parentElem.appendChild(fragment);
     };
-    addFragment(pictures, renderPicture, picturesListELement);
+    window.addFragment(pictures, window.renderPicture, window.picturesListELement);
+    window.showFilters(pictures);
   };
   // Создаем окно, в котором будет отображаться сообщение об ошибке
   window.errorHandler = function (errorMessage) {
