@@ -3,7 +3,7 @@
 (function () {
   window.backend = {
     load: function (onLoad, onError) {
-      var URL = 'https://js.dump.academy/kekstagram/data';
+      var URL = 'https://javascript.pages.academy/kekstagram/data';
       var xhr = new XMLHttpRequest();
       xhr.responseType = 'json';
 
@@ -26,7 +26,7 @@
       xhr.send();
     },
     save: function (data, onLoad, onError) {
-      var URL = 'https://js.dump.academy/kekstagram';
+      var URL = 'https://javascript.pages.academy/kekstagram';
       var xhr = new XMLHttpRequest();
       xhr.responseType = 'json';
 
