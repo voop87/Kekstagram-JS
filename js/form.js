@@ -31,15 +31,45 @@
   };
 
   // Уровень увеличения фото
-  var DEFAULT_SCALE_LEVEL = '55';
+  var DEFAULT_SCALE_LEVEL = 55;
+  var SCALE_LEVEL_GAP = 5;
+  var scaleLevel = DEFAULT_SCALE_LEVEL;
   var scaleLevelInput = imgUploadWindow.querySelector('.scale__control--value');
-  var uploadImg = imgUploadWindow.querySelector('img');
+  var uploadImg = imgUploadWindow.querySelector('.img-upload__preview img');
 
   // Сбрасывает уровень увеличения фото на дефолт
   var resetScaleLevel = function () {
     scaleLevelInput.value = DEFAULT_SCALE_LEVEL + '%';
     uploadImg.style.transform = 'scale(1)';
   };
+
+  // Изменяет размер фото
+  var setScaleLevel = function (scaleLvl) {
+    scaleLevelInput.value = scaleLvl + '%';
+    uploadImg.style.transform = 'scale(' + scaleLvl / DEFAULT_SCALE_LEVEL + ')';
+  };
+
+  // Обработчики нажатия на кнопку увеличения/уменьшения фото
+  var scaleSmallerBtn = imgUploadWindow.querySelector('.scale__control--smaller');
+  var scaleBiggerBtn = imgUploadWindow.querySelector('.scale__control--bigger');
+
+  scaleSmallerBtn.addEventListener('click', function () {
+    scaleLevel -= SCALE_LEVEL_GAP;
+
+    if (scaleLevel < 5) {
+      scaleLevel = 5;
+    }
+    setScaleLevel(scaleLevel);
+  });
+
+  scaleBiggerBtn.addEventListener('click', function () {
+    scaleLevel += SCALE_LEVEL_GAP;
+
+    if (scaleLevel > 100) {
+      scaleLevel = 100;
+    }
+    setScaleLevel(scaleLevel);
+  });
 
   // Уровень эффектов на фото
   var DEFAULT_EFFECT_LEVEL = 20;
@@ -52,6 +82,9 @@
     effectLevelInput.value = DEFAULT_EFFECT_LEVEL;
     effectLevelDepth.style.width = DEFAULT_EFFECT_LEVEL + '%';
     effectLevelPin.style.left = DEFAULT_EFFECT_LEVEL + '%';
+
+    uploadImg.className = '';
+    uploadImg.style.filter = '';
   };
 
   // Тип эффекта по умолчанию
@@ -64,11 +97,15 @@
     var effectTypeList = imgUploadWindow.querySelector('.effects__list');
     var effectTypes = imgUploadWindow.querySelectorAll('.effects__radio');
 
-    // Сбрасывает уровень эффекта на дефолт при клике на тип эффекта
+    // Меняет тип эффекта на превью при клике на тип эффекта
     var onEffectTypeChange = function () {
-      for (var i = 0; i < effectTypes.length; i++) {
-        effectTypes[i].addEventListener('change', resetEffectLevel);
-      }
+      
+      effectTypes.forEach(function (el) {
+          el.addEventListener('click', function () {
+            resetEffectLevel();
+            uploadImg.className = 'effects__preview--' + el.value;
+          });
+      });
     };
     effectTypeList.addEventListener('click', onEffectTypeChange);
 
@@ -90,7 +127,7 @@
 
         effectLevelPin.style.left = (effectLevelPin.offsetLeft - shift) + 'px';
         if ((effectLevelPin.offsetLeft - shift) < PIN_MIN_POSITION) {
-          effectLevelPin.style.left = PIN_MIN_POSITION;
+          effectLevelPin.style.left = PIN_MIN_POSITION + 'px';
         }
         if ((effectLevelPin.offsetLeft - shift) > PIN_MAX_POSITION) {
           effectLevelPin.style.left = PIN_MAX_POSITION + 'px';
@@ -100,6 +137,8 @@
         var effectLevel = Math.round(pinPosition / lineWidth * 100);
         effectLevelInput.value = effectLevel;
         effectLevelDepth.style.width = effectLevel + '%';
+        
+        setEffectLevel(effectLevel);
       };
 
       var onMouseUp = function (upEvt) {
@@ -112,29 +151,27 @@
       document.addEventListener('mouseup', onMouseUp);
     });
 
-    // Изменение уровня фильтра при клике на линию слайдера
-    effectLevelLine.addEventListener('click', function (evt) {
-      evt.preventDefault();
-
-      var lineWidth = parseInt(window.getComputedStyle(effectLevelLine).width, 10);
-      var PIN_MIN_POSITION = 0;
-      var PIN_MAX_POSITION = lineWidth;
-      var LINE_START_POSITION = 254;
-      var startPos = evt.clientX - LINE_START_POSITION;
-      effectLevelPin.style.left = startPos + 'px';
-      if (startPos < PIN_MIN_POSITION) {
-        effectLevelPin.style.left = PIN_MIN_POSITION;
+    // Применение уровня эффекта на превью фото при перемещении ползунка
+    var setEffectLevel = function (effectLvl) {
+      switch (uploadImg.className) {
+        case 'effects__preview--chrome':
+          uploadImg.style.filter = 'grayscale(' + effectLvl / 100 + ')';
+          break;
+        case 'effects__preview--sepia':
+          uploadImg.style.filter = 'sepia(' + effectLvl / 100 + ')';
+          break;
+        case 'effects__preview--marvin':
+          uploadImg.style.filter = 'invert(' + effectLvl + '%)';
+          break;
+        case 'effects__preview--phobos':
+          uploadImg.style.filter = 'blur(' + effectLvl * 3 / 100 + 'px)';
+          break;
+        case 'effects__preview--heat':
+          uploadImg.style.filter = 'brightness(' + effectLvl * 3 / 100 + ')';
+          break;
       }
-      if (startPos > PIN_MAX_POSITION) {
-        effectLevelPin.style.left = PIN_MAX_POSITION + 'px';
-      }
-
-      var pinPosition = parseInt(effectLevelPin.style.left, 10);
-      var effectLevel = Math.round(pinPosition / lineWidth * 100);
-      effectLevelInput.value = effectLevel;
-      effectLevelDepth.style.width = effectLevel + '%';
-    });
-
+    };
+    
     imgUploadCancelButton.addEventListener('click', function () {
       closeImgUploadForm();
     });
