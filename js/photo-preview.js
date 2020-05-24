@@ -22,9 +22,9 @@
       reader.addEventListener('load', function () {
         preview.src = reader.result;
 
-        effectsPreviews.forEach(function (el) {
-          el.style.backgroundImage = 'url(' + reader.result + ')';
-        });
+        for (var i = 0; i < effectsPreviews.length; i++) {
+          effectsPreviews[i].style.backgroundImage = 'url(' + preview.src + ')';
+        }
       });
 
       reader.readAsDataURL(file);

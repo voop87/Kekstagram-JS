@@ -99,12 +99,11 @@
 
     // Меняет тип эффекта на превью при клике на тип эффекта
     var onEffectTypeChange = function () {
-      
       effectTypes.forEach(function (el) {
-          el.addEventListener('click', function () {
-            resetEffectLevel();
-            uploadImg.className = 'effects__preview--' + el.value;
-          });
+        el.addEventListener('click', function () {
+          resetEffectLevel();
+          uploadImg.className = 'effects__preview--' + el.value;
+        });
       });
     };
     effectTypeList.addEventListener('click', onEffectTypeChange);
@@ -137,7 +136,6 @@
         var effectLevel = Math.round(pinPosition / lineWidth * 100);
         effectLevelInput.value = effectLevel;
         effectLevelDepth.style.width = effectLevel + '%';
-        
         setEffectLevel(effectLevel);
       };
 
@@ -171,7 +169,7 @@
           break;
       }
     };
-    
+
     imgUploadCancelButton.addEventListener('click', function () {
       closeImgUploadForm();
     });
